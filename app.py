@@ -82,7 +82,9 @@ class GravadorDeVoz:
     async def processar_resposta(self, transcricao):
         """Processa a resposta do modelo a partir da transcrição do áudio."""
         
-        texto_resposta = self.llm.invoke(f"Responda de forma curta e objetiva: {transcricao}").content
+        texto_resposta = self.llm.invoke(f"""Seu nome é KAT, e você é uma assistente pessoal
+                                        Responda de forma curta, porém completa e objetiva. 
+                                        Além disso, seja muito educada e cortês: {transcricao}""").content
         
         return self.texto_para_fala(texto_resposta)
 
@@ -168,6 +170,7 @@ class InterfaceGravadorDeVoz:
         self.gravador.interface = self  # Referência para atualizar a interface a partir de GravadorDeVoz
         self.root = root
         self.root.title("KAT | Ket's Assistant Transformer")
+        self.root.iconbitmap("images/icon.ico")
         self.configurar_estilos()
 
         # Layout inicial dos componentes
