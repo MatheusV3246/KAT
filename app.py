@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import sounddevice as sd
 import scipy.io.wavfile as wavfile
@@ -15,6 +16,12 @@ from faster_whisper import WhisperModel
 from time import sleep
 from PIL import Image
 import pystray  # Biblioteca para o ícone de bandeja
+import keyboard  # Biblioteca para detectar atalhos de teclado
+
+# Ocultar o console no Windows
+if sys.platform == "win32":
+    import ctypes
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 # Carrega o modelo Whisper uma vez
 modelo_whisper = WhisperModel("tiny", compute_type="int8", cpu_threads=os.cpu_count(), num_workers=os.cpu_count())
@@ -44,7 +51,7 @@ class GravadorDeVoz:
     def limpar_dir_audio(self, directory):
         for file_name in os.listdir(directory):
             file_path = os.path.join(directory, file_name)
-            if os.path.isfile(file_path) and file_name.endswith('.wav') or file_name.endswith('.mp3'):
+            if os.path.isfile(file_path) and (file_name.endswith('.wav') or file_name.endswith('.mp3')):
                 try:
                     os.remove(file_path)
                 except:
@@ -76,7 +83,6 @@ class GravadorDeVoz:
         try:
             segmentos, _ = modelo_whisper.transcribe(self.caminho_audio, language="pt")
             return "".join(segment.text for segment in segmentos).strip()
-        
         except Exception:
             return ""
 
@@ -134,7 +140,7 @@ class GravadorDeVoz:
         """Processa a transcrição e a resposta do modelo."""
         self.esta_processando = True
         self.interface.atualizar_layout()
-        self.interface.atualizar_status("🔄 Processando...")
+        self.interface.atualizar_status("⏳ Processando...")
         transcricao = await self.transcrever_audio()
         
         if transcricao:
@@ -182,6 +188,17 @@ class InterfaceGravadorDeVoz:
 
         # Adiciona o ícone de bandeja do sistema
         self.iniciar_icone_bandeja()
+
+        # Define o atalho Ctrl + K para alternar entre minimizar e maximizar usando `keyboard`
+        keyboard.add_hotkey('alt+k', self.toggle_window)
+
+    def toggle_window(self):
+        """Alterna entre minimizar e maximizar a janela ao pressionar Ctrl + K."""
+        if self.root.state() == 'withdrawn':
+            self.root.deiconify()
+            self.root.state('normal')
+        else:
+            self.root.withdraw()
 
     def iniciar_icone_bandeja(self):
         """Configura o ícone de bandeja do sistema (System Tray)."""
